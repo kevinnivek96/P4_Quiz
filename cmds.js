@@ -141,9 +141,9 @@ exports.testCmd = (rl,id) => {
 
 			log('Su respuesta es: ');
 			if( answer.toLowerCase().trim() === quiz.answer.toLowerCase()) {
-				biglog('Correcta','green');
+				biglog('correcta','green');
 			} else {
-				biglog('Incorrecta','red');
+				biglog('incorrecta','red');
 
 			}
 			rl.prompt();
@@ -175,9 +175,9 @@ exports.playCmd = (rl) => {
 
 	const playOne = () => {
 	if (toBeResolved.length === 0){
-		log('Ya no quedan preguntas.');
-		log('Su puntuación es: ');
-		biglog(score);
+		log('No hay nada mas que preguntar.');
+		log('Fin del examen. Aciertos: ');
+		biglog(score,'magenta');
 		rl.prompt();
 
 
@@ -189,16 +189,16 @@ exports.playCmd = (rl) => {
 
 		rl.question(colorize(quiz.question + "? ",'red'), answer => {
 
-			log('Su respuesta es: ');
+			
 			if( answer.toLowerCase().trim() === quiz.answer.toLowerCase()) {
-				biglog('Correcta','green');
 				score++;
+				log('correcto - Lleva ' + score + ' aciertos');
 				playOne();
 
 			} else {
-				biglog('Incorrecta','red');
-				log('Su puntuación es: ');
-				biglog(score);
+				log('incorrecto.');
+				log('Fin del examen. Aciertos: ');
+				biglog(score,'magenta');
 				rl.prompt();
 
 
