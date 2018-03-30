@@ -4,29 +4,29 @@ const {log,errorlog,colorize,biglog} = require('./out');
 
 
 
-exports.helpCmd = rl => {
+exports.helpCmd = (socket,rl) => {
 
-	log('Commandos : ')
-	log('	h|help - Muestra esta ayuda.');
-	log('	list - Listar los quizzes existentes.');
-	log('	show <id> - Muestra la pregunta y la respuesta del quiz indicado.');
-	log('	add - Añadir un nuevo quiz interactivamente.');
-	log('	delete <id> - Borrar el quiz indicado.');
-	log('	edit <id> - Editar el quiz indicado.');
-	log('	test <id> - Probar el quiz indicado.');
-	log('	p|play - Jugar a preguntar aleatoriamente todos los quizzes.');
-	log('	credits - Créditos.');
-	log('	q|quit - Salir del programa.');
+	log(socket,'Commandos : ')
+	log(socket,'	h|help - Muestra esta ayuda.');
+	log(socket,'	list - Listar los quizzes existentes.');
+	log(socket,'	show <id> - Muestra la pregunta y la respuesta del quiz indicado.');
+	log(socket,'	add - Añadir un nuevo quiz interactivamente.');
+	log(socket,'	delete <id> - Borrar el quiz indicado.');
+	log(socket,'	edit <id> - Editar el quiz indicado.');
+	log(socket,'	test <id> - Probar el quiz indicado.');
+	log(socket,'	p|play - Jugar a preguntar aleatoriamente todos los quizzes.');
+	log(socket,'	credits - Créditos.');
+	log(socket,'	q|quit - Salir del programa.');
 	rl.prompt();
 };
 
-exports.listCmd = rl => {
+exports.listCmd = (socket,rl) => {
 	models.quiz.findAll()
 	.each( quiz =>{
-		log(` [${colorize(quiz.id,'magenta')}]: ${quiz.question}`);
+		log(socket,` [${colorize(quiz.id,'magenta')}]: ${quiz.question}`);
 	})
 	.catch(error => {
-		errorlog(error.message);
+		errorlog(socket,error.message);
 	})
 	.then(() => {
 		rl.prompt();
@@ -53,7 +53,7 @@ const validateId = id => {
 	});
 };
 
-exports.showCmd = (rl,id) => {
+exports.showCmd = (socket,rl,id) => {
 
 	validateId(id)
 	.then( id => models.quiz.findById(id))
@@ -61,11 +61,11 @@ exports.showCmd = (rl,id) => {
 		if ( !quiz){
 			throw new Error(`No existe un quiz asociado al id = ${id}.`)
 		}
-		log(` [${colorize(id,'magenta')}]: ${quiz.question} ${colorize('=>','magenta')} ${quiz.answer}`);
+		log(socket,` [${colorize(id,'magenta')}]: ${quiz.question} ${colorize('=>','magenta')} ${quiz.answer}`);
 
 	})
 	.catch(error => {
-	errorlog(error.message);
+	errorlog(socket, error.message);
 	})
 	.then(() => {
 		rl.prompt();
@@ -88,7 +88,7 @@ const makeQuestion = (rl, text) => {
 
 	
 
-exports.addCmd = rl => {
+exports.addCmd = (socket,rl) => {
 
 	makeQuestion(rl, 'Introduzca una pregunta: ')//
 	.then(q => {									//
@@ -101,17 +101,17 @@ exports.addCmd = rl => {
 		return models.quiz.create(quiz)
 	})
 	.then(quiz =>{
-		log(` ${colorize('Se ha añadido', 'magenta')}: ${quiz.question} ${colorize('=>','magenta')} ${quiz.answer}`)
+		log(socket,` ${colorize('Se ha añadido', 'magenta')}: ${quiz.question} ${colorize('=>','magenta')} ${quiz.answer}`)
 
 	})
 	.catch(Sequelize.ValidationError,error => {
-		errorlog('El quiz es erroneo: ');
-		error.errors.forEach(({message}) => errorlog(message));
+		errorlog(socket, 'El quiz es erroneo: ');
+		error.errors.forEach(({message}) => errorlog(socket,message));
 
 
 	})
 	.catch(error => {
-	errorlog(error.message);
+	errorlog(socket, error.message);
     })
 	.then(() => {
 		rl.prompt();
@@ -120,24 +120,23 @@ exports.addCmd = rl => {
 	
 };
 
-exports.deleteCmd = (rl,id) => {
+exports.deleteCmd = (socket, rl,id) => {
 
 	validateId(id)
 	.then( id => models.quiz.destroy({where:{id}}))
 	.catch(error => {
-	errorlog(error.message);
+	errorlog(socket, error.message);
 	})
 	.then(() => {
 		rl.prompt();
 	});
 };
 
-exports.editCmd = (rl,id) => {
+exports.editCmd = (socket, rl,id) => {
 
 	validateId(id)
 	.then(id => models.quiz.findById(id))
 	.then(quiz => {
-		console.log(` ${quiz}`);
 
 		if (!quiz) {
 			throw new Error(`No existe un quiz asociado al id=${id}. `);
@@ -159,15 +158,15 @@ exports.editCmd = (rl,id) => {
 			return quiz.save();
 		})
 		.then(quiz => {
-			log(` Se ha cambiado el quiz ${colorize(quiz.id,'magenta')} por: ${quiz.question} ${colorize('=>','magenta')} ${quiz.answer}`);
+			log(socket,` Se ha cambiado el quiz ${colorize(quiz.id,'magenta')} por: ${quiz.question} ${colorize('=>','magenta')} ${quiz.answer}`);
 
 		})
 		.catch(Sequelize.ValidationError,error => {
-		errorlog('El quiz es erroneo: ');
-		error.errors.forEach(({message}) => errorlog(message));
+		errorlog(socket, 'El quiz es erroneo: ');
+		error.errors.forEach(({message}) => errorlog(socket, message));
 		})
 		.catch(error => {
-		errorlog(error.message);
+		errorlog(socket, error.message);
 
 	 	})
 	 	.then(() => {
@@ -178,20 +177,19 @@ exports.editCmd = (rl,id) => {
 
 				
 // TO DO 
-exports.testCmd = (rl,id) => {
+exports.testCmd = (socket, rl,id) => {
 	validateId(id)
 	.then(id =>models.quiz.findById(id))	
-	.then(quiz => {
-		console.log(quiz)		
+	.then(quiz => {		
 		if (!quiz) {
 			throw new Error(`No existe un quiz asociado al id=${id}. `);
 		} 
 		return makeQuestion(rl,quiz.question + "? ")
 		.then(a => {
 			if( a.toLowerCase().trim() === quiz.answer.toLowerCase()) {
-				log('correct','green');
+				log(socket, 'correct','green');
 			} else {
-				log('incorrect','red');
+				log(socket,'incorrect','red');
 
 			}
 
@@ -199,7 +197,7 @@ exports.testCmd = (rl,id) => {
     
 	})
 	.catch(error => {
-	errorlog(error.message);
+	errorlog(socket, error.message);
 
 	 })
 	 .then(() => {
@@ -209,15 +207,15 @@ exports.testCmd = (rl,id) => {
 
 
 // TO DO
-exports.playCmd = (rl) => {
+exports.playCmd = (socket, rl) => {
 
 	let score = 0;
 	let toBeResolved = [];
 	const playOne = () => {
 		if (toBeResolved.length === 0) {
-		log('No hay nada mas que preguntar.');
-		log('Fin del examen. Aciertos: ');
-		biglog(score,'magenta');
+		log(socket, 'No hay nada mas que preguntar.');
+		log(socket, 'Fin del examen. Aciertos: ');
+		biglog(socket, score,'magenta');
 		rl.prompt();
 
 	    } else {
@@ -232,24 +230,25 @@ exports.playCmd = (rl) => {
 
 			if( a.toLowerCase().trim() === quiz.answer.toLowerCase()) {
 				score++;
-				log('correcto - Lleva ' + score + ' aciertos');
+				log(socket, 'correcto - Lleva ' + score + ' aciertos');
 				playOne();
 			} else {				
-				log('incorrecto.');
-				log('Fin del examen. Aciertos: ');
-				biglog(score,'magenta');
+				log(socket, 'incorrecto.');
+				log(socket, 'Fin del examen. Aciertos: ');
+				biglog(socket, score,'magenta');
 				rl.prompt();
 
 
 			}
 
-		});
+		    });
 
 		})
 		.catch(error => {
-		errorlog("Error en juego:" + error.message);
+		errorlog(socket, "Error en juego:" + error.message);
 		});
-	}
+		
+	    }
 	};
 	models.quiz.findAll()
 	.each( quiz => {
@@ -261,7 +260,7 @@ exports.playCmd = (rl) => {
 		playOne();
 	})
 	.catch(error => {
-		errorlog("Error en array:" + error.message);
+		errorlog(socket, "Error en array:" + error.message);
 	});
 
 
@@ -274,13 +273,16 @@ exports.playCmd = (rl) => {
 
 
 
-exports.creditsCmd = () => {
-	log('Autores de la práctica:');
-	log('kevinnivek96','green');
+exports.creditsCmd = (socket,rl) => {
+	log(socket,'Autores de la práctica:');
+	log(socket,'kevinnivek96','green');
+	rl.prompt();
+
 };
 	
-exports.quitCmd = (rl) => {
+exports.quitCmd = (socket, rl) => {
 	rl.close();
+	socket.end();
 	
 
 };
